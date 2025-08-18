@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+  # PostgreSQL主数据库
+  postgres:
+    image: postgres:14
+    container_name: xcloud-postgres
+    environment:
+      POSTGRES_DB: xcloud
+      POSTGRES_USER: xcloud
+      POSTGRES_PASSWORD: xcloud123
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./docker/data/postgres:/var/lib/postgresql/data
+      - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - xcloud-network
+
+  # Redis缓存
+  redis:
+    image: redis:6-alpine
+    container_name: xcloud-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./docker/data/redis:/data
+    networks:
+      - xcloud-network
+
+  # RabbitMQ消息队列
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: xcloud-rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: xcloud
+      RABBITMQ_DEFAULT_PASS: xcloud123
+    ports:
+      - "5672:5672"   # AMQP端口
+      - "15672:15672" # 管理界面
+    volumes:
+      - ./docker/data/rabbitmq:/var/lib/rabbitmq
+    networks:
+      - xcloud-network
+
+networks:
+  xcloud-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data:
+  rabbitmq_data:
