@@ -188,31 +188,105 @@ const activityColumns = [
   }
 ]
 
+// 生成最近12个月的数据
+const generateRecentMonths = () => {
+  const months = []
+  const currentDate = new Date()
+  
+  for (let i = 11; i >= 0; i--) {
+    const date = new Date(currentDate.getFullYear(), currentDate.getMonth() - i, 1)
+    months.push(`${date.getMonth() + 1}月`)
+  }
+  
+  return months
+}
+
+// 生成对应的收入数据 (模拟数据，实际应从API获取)
+const generateRevenueData = () => {
+  const baseValue = 1500
+  return Array.from({ length: 12 }, (_, i) => {
+    // 模拟逐月增长趋势，最后一个月是当前月
+    const growth = Math.random() * 500 + i * 150
+    return Math.round(baseValue + growth)
+  })
+}
+
 // 收入趋势图配置
 const revenueChartOption = computed(() => ({
   tooltip: {
-    trigger: 'axis'
+    trigger: 'axis',
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    borderColor: '#E5E7EB',
+    borderWidth: 1,
+    textStyle: {
+      color: '#374151',
+      fontSize: 14
+    },
+    formatter: (params: any) => {
+      const data = params[0]
+      return `
+        <div style="padding: 4px;">
+          <div style="font-weight: 600; margin-bottom: 4px;">${data.name}</div>
+          <div style="color: #1890ff;">
+            <span style="display: inline-block; width: 10px; height: 10px; background-color: #1890ff; border-radius: 50%; margin-right: 6px;"></span>
+            收入: ¥${(data.value * 1000).toLocaleString()}
+          </div>
+        </div>
+      `
+    }
   },
   grid: {
-    left: '3%',
-    right: '4%',
-    bottom: '3%',
-    containLabel: true
+    left: '60px',
+    right: '30px',
+    bottom: '50px',
+    top: '30px',
+    containLabel: false
   },
   xAxis: {
     type: 'category',
-    data: ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'],
+    data: generateRecentMonths(),
     axisLine: {
+      show: true,
       lineStyle: {
-        color: '#E5E7EB'
+        color: '#D1D5DB',
+        width: 1
       }
+    },
+    axisTick: {
+      show: true,
+      lineStyle: {
+        color: '#D1D5DB'
+      }
+    },
+    axisLabel: {
+      color: '#6B7280',
+      fontSize: 13,
+      fontWeight: 500
+    },
+    splitLine: {
+      show: false
     }
   },
   yAxis: {
     type: 'value',
     axisLine: {
+      show: false
+    },
+    axisTick: {
+      show: false
+    },
+    axisLabel: {
+      color: '#6B7280',
+      fontSize: 13,
+      fontWeight: 500,
+      formatter: (value: number) => `¥${(value * 1000).toLocaleString()}`
+    },
+    splitLine: {
+      show: true,
       lineStyle: {
-        color: '#E5E7EB'
+        color: '#F3F4F6',
+        width: 1,
+        type: 'solid'
       }
     }
   },
@@ -221,13 +295,19 @@ const revenueChartOption = computed(() => ({
       name: '收入',
       type: 'line',
       smooth: true,
-      data: [1200, 1320, 1010, 1340, 1890, 2300, 2100, 2400, 2180, 2650, 2890, 3100],
+      data: generateRevenueData(),
       lineStyle: {
         color: '#1890ff',
-        width: 3
+        width: 3,
+        shadowColor: 'rgba(24, 144, 255, 0.3)',
+        shadowBlur: 10
       },
       itemStyle: {
-        color: '#1890ff'
+        color: '#1890ff',
+        borderColor: '#ffffff',
+        borderWidth: 2,
+        shadowColor: 'rgba(24, 144, 255, 0.3)',
+        shadowBlur: 5
       },
       areaStyle: {
         color: {
@@ -237,9 +317,24 @@ const revenueChartOption = computed(() => ({
           x2: 0,
           y2: 1,
           colorStops: [
-            { offset: 0, color: 'rgba(24, 144, 255, 0.3)' },
-            { offset: 1, color: 'rgba(24, 144, 255, 0.05)' }
+            { offset: 0, color: 'rgba(24, 144, 255, 0.25)' },
+            { offset: 0.5, color: 'rgba(24, 144, 255, 0.1)' },
+            { offset: 1, color: 'rgba(24, 144, 255, 0.02)' }
           ]
+        }
+      },
+      symbol: 'circle',
+      symbolSize: 6,
+      emphasis: {
+        itemStyle: {
+          color: '#1890ff',
+          borderColor: '#ffffff',
+          borderWidth: 3,
+          shadowColor: 'rgba(24, 144, 255, 0.5)',
+          shadowBlur: 10
+        },
+        lineStyle: {
+          width: 4
         }
       }
     }
@@ -247,45 +342,109 @@ const revenueChartOption = computed(() => ({
 }))
 
 // 云平台分布图配置
-const platformChartOption = computed(() => ({
-  tooltip: {
-    trigger: 'item',
-    formatter: '{a} <br/>{b}: {c} ({d}%)'
-  },
-  legend: {
-    bottom: '10',
-    left: 'center'
-  },
-  series: [
-    {
-      name: '云平台使用量',
-      type: 'pie',
-      radius: ['30%', '70%'],
-      center: ['50%', '45%'],
-      avoidLabelOverlap: false,
-      label: {
-        show: false,
-        position: 'center'
+const platformChartOption = computed(() => {
+  const data = [
+    { value: 1048, name: '腾讯云', itemStyle: { color: '#1890ff' } },
+    { value: 735, name: '阿里云', itemStyle: { color: '#52c41a' } },
+    { value: 580, name: '华为云', itemStyle: { color: '#faad14' } },
+    { value: 484, name: 'AWS', itemStyle: { color: '#f5222d' } }
+  ]
+  
+  const total = data.reduce((sum, item) => sum + item.value, 0)
+  
+  return {
+    tooltip: {
+      trigger: 'item',
+      backgroundColor: 'rgba(255, 255, 255, 0.95)',
+      borderColor: '#E5E7EB',
+      borderWidth: 1,
+      textStyle: {
+        color: '#374151',
+        fontSize: 14
       },
-      emphasis: {
+      formatter: (params: any) => {
+        const percentage = ((params.value / total) * 100).toFixed(1)
+        return `
+          <div style="padding: 4px;">
+            <div style="font-weight: 600; margin-bottom: 4px;">${params.name}</div>
+            <div style="color: ${params.color};">
+              <span style="display: inline-block; width: 10px; height: 10px; background-color: ${params.color}; border-radius: 50%; margin-right: 6px;"></span>
+              使用量: ${params.value}万元 (${percentage}%)
+            </div>
+          </div>
+        `
+      }
+    },
+    legend: {
+      bottom: '10',
+      left: 'center',
+      textStyle: {
+        color: '#6B7280',
+        fontSize: 13,
+        fontWeight: 500
+      },
+      itemGap: 20
+    },
+    series: [
+      {
+        name: '云平台使用量',
+        type: 'pie',
+        radius: ['35%', '70%'],
+        center: ['50%', '42%'],
+        avoidLabelOverlap: true,
         label: {
           show: true,
-          fontSize: '16',
-          fontWeight: 'bold'
-        }
-      },
-      labelLine: {
-        show: false
-      },
-      data: [
-        { value: 1048, name: '腾讯云', itemStyle: { color: '#1890ff' } },
-        { value: 735, name: '阿里云', itemStyle: { color: '#52c41a' } },
-        { value: 580, name: '华为云', itemStyle: { color: '#faad14' } },
-        { value: 484, name: 'AWS', itemStyle: { color: '#f5222d' } }
-      ]
-    }
-  ]
-}))
+          position: 'outside',
+          fontSize: 13,
+          fontWeight: 500,
+          color: '#374151',
+          formatter: (params: any) => {
+            const percentage = ((params.value / total) * 100).toFixed(1)
+            return `${params.name}\n${percentage}%`
+          }
+        },
+        emphasis: {
+          label: {
+            show: true,
+            fontSize: 16,
+            fontWeight: 'bold',
+            color: '#1F2937'
+          },
+          itemStyle: {
+            shadowBlur: 10,
+            shadowOffsetX: 0,
+            shadowColor: 'rgba(0, 0, 0, 0.5)'
+          }
+        },
+        labelLine: {
+          show: true,
+          length: 15,
+          length2: 10,
+          lineStyle: {
+            color: '#D1D5DB',
+            width: 1
+          }
+        },
+        itemStyle: {
+          borderColor: '#ffffff',
+          borderWidth: 2,
+          shadowColor: 'rgba(0, 0, 0, 0.1)',
+          shadowBlur: 5
+        },
+        data: data.map(item => ({
+          ...item,
+          itemStyle: {
+            ...item.itemStyle,
+            borderColor: '#ffffff',
+            borderWidth: 2,
+            shadowColor: 'rgba(0, 0, 0, 0.1)',
+            shadowBlur: 5
+          }
+        }))
+      }
+    ]
+  }
+})
 
 onMounted(() => {
   // TODO: 从API获取实际数据
